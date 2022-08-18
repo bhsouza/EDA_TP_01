@@ -1,5 +1,13 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Airline
+{
+    int id;
+    char airlineCode[2];
+    int delay;
+};
 
 int word2vec(FILE *vArqEnt)
 {
@@ -14,7 +22,6 @@ int word2vec(FILE *vArqEnt)
         for(p=0;p<n;p++)
             printf("\n %d:%d", p, V[p]);
     break;
-
         printf("\n %d", n);
     }
    */
