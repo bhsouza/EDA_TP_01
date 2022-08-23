@@ -1,47 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct Airline{
   int id;
-  char airlineCode[2];
+  char airlineCode[3];
   int delay;
 }airline;
-int AloVet(FILE *vArqEnt,airline *vetor)
+
+int AloVet(FILE *vArqEnt,airline vetor[])
 {
-int s,i=1;
-char c,Linha[7],*result;
-fflush(vArqEnt);
-printf("Entrou");
-while (!feof(vArqEnt))
-  {
-	// Lê uma linha (inclusive com o '\n')
-      result = fgets(Linha, 100, vArqEnt);  // o 'fgets' lê até 99 caracteres ou até o '\n'
-      if (result)  // Se foi possível ler
-      //strtok(result,",")
-      airline[i]->id = 
-      i++;
-  }
-  fclose(arq);
-for (c = getc(vArqEnt); c != EOF; c = getc(vArqEnt)){
-if (!fscanf(vArqEnt,"%d;%s;%d",&vetor->id,vetor->airlineCode,&vetor->delay)){
+int s=0,i=1;
+char c,Linha[14],*result;
+printf("Entrou\n");
+
+while (!feof(vArqEnt)){
+if (s==0)
+{
+for (c = getc(vArqEnt); c != EOF; c = getc(vArqEnt))
+      if (c == '\n') 
+        break;
+}
+
+
+//printf("%d\n", s);
+
+if (!fscanf(vArqEnt,"%d,%[^,],%d",&vetor[s].id,vetor[s].airlineCode, &vetor[s].delay)){
 printf("Erro ao Scanear o arquivo."); 
 break;
 }    
 
-printf(&vetor->id,vetor->airlineCode,&vetor->delay);
+printf("\n%d,%s,%d", vetor[s].id,vetor[s].airlineCode,vetor[s].delay);
 s++;
-if (s=2){
-break;
-}
-      
-      /*
-      V = gera_vet_aleatorio(n);
-      for(p=0;p<n;p++)
-        printf("\n %d:%d", p, V[p]);
-        break;
-      */
-}      
- return 1;
+} 
+     
+ return 0;
 }
 
 int main()
@@ -65,10 +58,11 @@ int main()
     for (c = getc(fp); c != EOF; c = getc(fp))
       if (c == '\n') 
         QtdLinhas++;
+        fclose(fp);
 
     printf("O arquivo tem %d linhas\n ", QtdLinhas);
     //alocaçao dinamica na memoria
-    vetorDinamico = malloc(QtdLinhas*sizeof(airline));
+    vetorDinamico = (airline *)malloc(QtdLinhas*sizeof(airline));
     //printf(*vetorDinamico);
     if (vetorDinamico == NULL) {
 		printf("Alocação mal sucedida!");
@@ -76,8 +70,9 @@ int main()
     return 0;
 	}
 	else{
-    
+    fp = fopen("AirlinesDataSetTeste.csv", "r");
     AloVet(fp,vetorDinamico); 
+    fclose(fp);
     //Func Aqui
     
     /*
@@ -95,6 +90,5 @@ int main()
     */
     free(vetorDinamico);
     }
-    fclose(fp);
     return 0;
 }
