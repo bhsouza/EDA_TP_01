@@ -96,7 +96,7 @@ void InsertSort(sub_airline *VetAir,int QtdAir)
 void CriArqCsv(sub_airline *VetAir,int QtdAir){
   int e=0,f=0;
   FILE *arquivosaida;  
-  arquivosaida = fopen("AirlinesSaida.csv.csv","w+");
+  arquivosaida = fopen("AirlinesSaida.csv","w+");
   if (arquivosaida == NULL){
       printf("Erro na criação do arquivo de saida!");
         exit(1);
