@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 typedef struct airline{
   int  id;
@@ -24,28 +25,38 @@ int ValArq(FILE *fp){
   return 1;
 }
 
-void InsertSort(sub_airline VetAir[],int QtdAir)
-{
-  int e=0,f=0;
-  sub_airline VetSub;
-  for (e=1; e < QtdAir; e++) {
-    VetSub = VetAir[e];
-    for (f=e; (f>0) && (VetSub.media < VetAir[f-1].media);f--)
-      {
-        VetAir[f] = VetAir[f-1];
+void VerMedVet(airline *Vetor,sub_airline *VetAir,int QtdLinhas){
+  clock_t t = clock();
+  int e = 0,f = 0,g = 0,ValTot=0,ValDel=0;
+  for (e = 0; e < QtdLinhas; e++){
+    if (Vetor[e].contada==1){
+      ValTot=0;
+      ValDel=0;
+      for(f=0;f < QtdLinhas;f++){
+        if(strcmp(Vetor[e].airlineCode,Vetor[f].airlineCode) == 0)
+        {
+          if (Vetor[f].delay==1)
+          {
+            ValDel++;
+          }
+          ValTot++;
+        }
       }
-    VetAir[f]= VetSub;
+      sprintf(VetAir[g].airlineCode,"%s",Vetor[e].airlineCode);
+      VetAir[g].quant_delay=ValDel;
+      VetAir[g].total=ValTot;
+      VetAir[g].media=(float)ValDel/ValTot;
+      g++;
+    }
   }
+  t = clock() - t;
+  printf("Tempo de calculo da media: %lf",((double)t)/((CLOCKS_PER_SEC/1000)));
 }
 
-int AloVet(FILE *vArqEnt,airline vetor[],int QtdVet){
-  int e=0,f=0,g=0,s=0,QtdAir=0,ValTot=0,ValDel=0;
-  char c,ProVet[3];
-  sub_airline *vetair,VetSub;
-  FILE *arquivosaida;
-  vArqEnt = fopen("AirlinesDataSetTeste.csv", "r");
-  if (ValArq(vArqEnt))
-  {
+void PreVetArq(FILE *vArqEnt,airline *vetor){
+  int s=0,c=0;
+  vArqEnt = fopen("Airlines.csv", "r");
+  if (ValArq(vArqEnt)){
     //Percorre o Arquivo
     while (!feof(vArqEnt)){
       //Pular o Cabeçalho
@@ -59,16 +70,59 @@ int AloVet(FILE *vArqEnt,airline vetor[],int QtdVet){
         printf("Erro ao Scanear o arquivo."); 
         break;
       }   
-      //printf para acompanhar
-      printf("\n%d,%s,%d", vetor[s].id,vetor[s].airlineCode,vetor[s].delay);
       s++;
     }
     fclose(vArqEnt);
+  }
+}
+
+void InsertSort(sub_airline *VetAir,int QtdAir)
+{
+  clock_t t = clock();
+  int e=0,f=0;
+  sub_airline VetSub;
+  for (e=1; e < QtdAir; e++) {
+    VetSub = VetAir[e];
+    for (f=e; (f>0) && (VetSub.media < VetAir[f-1].media);f--)
+      {
+        VetAir[f] = VetAir[f-1];
+      }
+    VetAir[f]= VetSub;
+  }
+  t = clock() - t;
+  printf("\nTempo da ordenação (Insert Sort): %lf",((double)t)/((CLOCKS_PER_SEC/1000)));
+}
+
+void CriArqCsv(sub_airline *VetAir,int QtdAir){
+  int e=0,f=0;
+  FILE *arquivosaida;  
+  arquivosaida = fopen("AirlinesSaida.csv.csv","w+");
+  if (arquivosaida == NULL){
+      printf("Erro na criação do arquivo de saida!");
+        exit(1);
+    }
+    else{
+      fprintf(arquivosaida,"Airline,Media\n");
+      for(e=0; e<QtdAir; e++){
+        fprintf(arquivosaida, "%s,%f\n", VetAir[e].airlineCode, VetAir[e].media);
+      }
+      fclose(arquivosaida);
+    }
+}
+
+int AloVet(FILE *vArqEnt,airline *vetor,int QtdVet,int *QtdAir){
+  int e=0,f=0,g=0,s=0;
+  char c,ProVet[3];
+  vArqEnt = fopen("Airlines.csv", "r");
+  if (ValArq(vArqEnt))
+  {
+    //Preenche o Struct 'AirLine' com o conteudo do arquivo .csv
+    PreVetArq(vArqEnt,vetor);
     //Definir os vetores para contar como 0 para trabalho no For abaixo. 
     for(e=0;e <= QtdVet;e++){
       vetor[e].contada = 0;
     }
-    //Contar quantas linhas aereas sao unicas e definir 1 para unica no contada e 0 para repetida
+    //Contar quantas linhas aereas sao unicas e definir 1 para unica no airline[].contada e 0 para repetida
     for (e = 0; e < QtdVet; e++){
       if (vetor[e].contada == 1){
         vetor[e].contada = 0;
@@ -82,73 +136,8 @@ int AloVet(FILE *vArqEnt,airline vetor[],int QtdVet){
             }
           }
         }
-        QtdAir++;        
+        *QtdAir = *QtdAir + 1;       
       }
-    }
-    //printf para acompanhar a quantidade de empresas. 
-    printf("\n%d Empresas",QtdAir);
-    //printf para acompanhar as empresas contadas. 
-    for(e=0;e < QtdVet;e++){
-      printf("\n%d",vetor[e].contada);
-    }
-    //alocar memoria para nova struct com os dados finais.
-    vetair = (sub_airline*)malloc(QtdAir*sizeof(sub_airline));
-    if (vetair == NULL){
-		  printf("Alocação mal sucedida!");
-		  exit(1);
-      return 0;
-	  }
-    else
-    {
-      //achar a média e preencher no struct secundário.
-      for (e = 0; e < QtdVet; e++){
-        if (vetor[e].contada==1)
-        {
-          ValTot=0;
-          ValDel=0;
-          for(f=0;f < QtdVet;f++){
-            if(strcmp(vetor[e].airlineCode,vetor[f].airlineCode) == 0)
-            {
-              if (vetor[f].delay==1)
-              {
-                ValDel++;
-              }
-              ValTot++;
-            }
-          }
-          sprintf(vetair[g].airlineCode,"%s",vetor[e].airlineCode);
-          vetair[g].quant_delay=ValDel;
-          vetair[g].total=ValTot;
-          vetair[g].media=(float)ValDel/ValTot;
-          g++;
-        }
-      }
-      //Liberar o vetor primário pois não será mais usado
-      free(vetor);
-      //Insert Sort para Ordenar struct secundário por média.
-      InsertSort(vetair,QtdAir);
-
-      //Printf para Acompanhamento do Struct secundário
-      for (g = 0; g < QtdAir; g++)
-      {
-        printf("\nTeste Struct (%s,%d,%d,%f)",vetair[g].airlineCode,vetair[g].quant_delay,vetair[g].total,vetair[g].media); 
-      }
-      //Cria Arquivo de Saida
-      arquivosaida = fopen("AirlinesSaida.csv","w+");
-      if (arquivosaida == NULL){
-        printf("Erro na criação do arquivo de saida!");
-          exit(1);
-          return 0;
-      }
-      else{
-        fprintf(arquivosaida,"Airline,Media\n");
-        for(e=0; e<QtdAir; e++){
-          fprintf(arquivosaida, "%s,%f\n", vetair[e].airlineCode, vetair[e].media);
-        }
-    
-        fclose(arquivosaida);
-      }
-      free(vetair);
     }  
   }
   else{
@@ -160,30 +149,52 @@ return 1;
 
 int main(){
   //variaveis globais
+  clock_t t = clock();
   FILE *fp;
-  int QtdLinhas = 0;
+  int e = 0,f = 0,g = 0,QtdLinhas=0,QtdAir=0,ValTot=0,ValDel=0;
   char c;  
-  airline *vetorDinamico;
+  airline *VetorDinamico;
+  sub_airline *VetAir;
+
   //abre o arquivo e conta as linhas para alocar um vetor na memoria
-  fp = fopen("AirlinesDataSetTeste.csv", "r");
+  fp = fopen("Airlines.csv", "r");
   if (ValArq(fp)){
     for (c = getc(fp); c != EOF; c = getc(fp))
       if (c == '\n')
         QtdLinhas++;
-      fclose(fp); 
-    //printf de acompanhamento
-    printf("O arquivo tem %d linhas\n ", QtdLinhas);
-    //alocaçao dinamica na memoria
-    vetorDinamico = (airline*)malloc(QtdLinhas*sizeof(airline));
-    //printf(*vetorDinamico);
-    if (vetorDinamico == NULL){
-		  printf("Alocação mal sucedida!");
+      fclose(fp);
+
+    //Alocaçao do struct principal.
+    VetorDinamico = (airline*)malloc(QtdLinhas*sizeof(airline));
+    if (VetorDinamico == NULL){
+		  printf("Alocacao mal sucedida!");
 		  exit(1);
       return 0;
 	  }
 	  else{
-      AloVet(fp,vetorDinamico,QtdLinhas); 
+      //Preenche e trabalha com o struct principal.
+      AloVet(fp,VetorDinamico,QtdLinhas,&QtdAir);
+      //Alocação da struct com os dados finais.
+      VetAir = (sub_airline*)malloc(QtdAir*sizeof(sub_airline));
+      if (VetAir == NULL){
+		    printf("Alocacao mal sucedida!");
+		    exit(1);
+        return 0;
+	    }
+      else
+      {
+        //achar a média e preencher no struct secundário.
+        VerMedVet(VetorDinamico,VetAir,QtdLinhas);
+        //Insert Sort para Ordenar struct secundário por média.
+        InsertSort(VetAir,QtdAir);
+        //Cria e preenche arquivo de saida.
+        CriArqCsv(VetAir,QtdAir);
+        free(VetAir);
+      }
+      free(VetorDinamico);
     }
+    t = clock() - t;
+    printf("\nTempo de Execução Total: %lf",((double)t)/((CLOCKS_PER_SEC/1000)));
   }
   else
   {
